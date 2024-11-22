@@ -1,6 +1,8 @@
 module Snake exposing (game)
 
 import Playground exposing (..)
+import Random
+import Array
 
 -- PHYSICS PARAMETERS
 
@@ -8,11 +10,8 @@ movementSpeed = 2
 
 -- CONSTANTS
 
-width = 100
-height = 100
-
-appleX = 100
-appleY = 100
+radius = 25
+appleRadius = 15
 
 -- MAIN
 
@@ -30,6 +29,9 @@ initialState =
   , vy = 0
   , dir = Left
   , isAlive = True
+  , count = 0
+  , appleX = 100
+  , appleY = 100
   }
 
 type Direction = Left | Right | Up | Down
@@ -44,13 +46,18 @@ view computer snake =
     b = computer.screen.bottom
     convertY y = (b + 76 + y)
   in
-    [ if snake.isAlive then
-      rectangle (rgb 255 0 255) width height 
-        |> move snake.x snake.y  
+    [ 
+      if snake.isAlive then
+      circle (rgb 255 0 255) radius 
+        |> move snake.x snake.y
       else 
       words black "Dead!"
-      , circle (rgb 255 0 0) 25 
-        |> move appleX appleY] 
+      , circle (rgb 255 0 0) appleRadius
+        |> move snake.appleX snake.appleY
+      , words black (String.fromInt snake.count)
+        |> move 300 300
+    ] 
+      
 
 
 
@@ -74,6 +81,9 @@ update computer snake =
         else if computer.keyboard.up then Up
         else if computer.keyboard.down then Down
         else snake.dir
+    newCount = if collided snake then snake.count + 1 else snake.count
+    newAppleX = if collided snake then 200 else snake.appleX
+    newAppleY = if collided snake then 200 else snake.appleY
     
   in
     { snake
@@ -82,7 +92,10 @@ update computer snake =
       , vx = 1
       , vy = 1
       , dir = newDir
-      , isAlive = inBounds (computer.screen.left + (width / 2)) (computer.screen.right - (width / 2)) snake.x && inBounds (computer.screen.bottom + (height / 2)) (computer.screen.top - (height / 2)) snake.y && (not (collided snake)) && snake.isAlive
+      , isAlive = inBounds (computer.screen.left + (radius)) (computer.screen.right - (radius)) snake.x && inBounds (computer.screen.bottom + (radius)) (computer.screen.top - (radius)) snake.y && snake.isAlive
+      , count = newCount
+      , appleX = newAppleX
+      , appleY = newAppleY
     }
 
 
@@ -96,10 +109,13 @@ inBounds min max x = -- Don't allow character to move offscreen
 
 
   
-collided snake = ((hypot(snake.x - appleX) (snake.y - appleY) < 25))
+collided snake = ((hypot(snake.x - snake.appleX) (snake.y - snake.appleY) < radius + appleRadius))
 
 hypot x y = -- Returns distance between centers
   toPolar (x, y) |> Tuple.first
  
+
+
+
 
 
