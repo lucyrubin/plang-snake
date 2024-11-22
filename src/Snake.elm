@@ -29,7 +29,6 @@ initialState =
   , vy = 0
   , dir = Left
   , isAlive = True
-  , segments = []
   , count = 0
   , appleX = 100
   , appleY = 100
@@ -53,17 +52,13 @@ view computer snake =
         |> move snake.x snake.y
       else 
       words black "Dead!"
-      , circle (rgb 255 255 0) appleRadius
+      , circle (rgb 255 0 0) appleRadius
         |> move snake.appleX snake.appleY
       , words black (String.fromInt snake.count)
         |> move 300 300
-      , words black (String.fromInt (List.length snake.segments))
-        |> move 0 0
-
-    ]
+    ] 
       
-    ++ (snake.segments |> List.map (drawSegment))
-  
+
 
 
 -- UPDATE
@@ -89,9 +84,6 @@ update computer snake =
     newCount = if collided snake then snake.count + 1 else snake.count
     newAppleX = if collided snake then 200 else snake.appleX
     newAppleY = if collided snake then 200 else snake.appleY
-    newSegments = 
-        if computer.keyboard.space then updateSegments (snake.segments ++ (newSegment snake)) snake
-        else updateSegments snake.segments snake
     
   in
     { snake
@@ -104,32 +96,8 @@ update computer snake =
       , count = newCount
       , appleX = newAppleX
       , appleY = newAppleY
-      , segments = newSegments
     }
 
-newSegment snake =
-  [
-    {
-      x = snake.x
-      , y = snake.y
-      , radius = 50
-    }
-  ]
-
-drawSegment segment =
-  circle (rgb 255 0 0) 25 
-    |> fade 0.1
-    |> move segment.x segment.y
-
-updateSegments segments snake =
-  segments |> List.map updateSegment snake
-
-updateSegment segment snake = 
-  {
-    x = segment.x + 10
-    , y = segment.y + 10
-    , radius = 50
-  }
 
 inBounds min max x = -- Don't allow character to move offscreen
     if x > max then
