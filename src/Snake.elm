@@ -32,6 +32,7 @@ initialState =
   , count = 0
   , appleX = 100
   , appleY = 100
+  , segments = []
   }
 
 type Direction = Left | Right | Up | Down
@@ -56,10 +57,10 @@ view computer snake =
         |> move snake.appleX snake.appleY
       , words black (String.fromInt snake.count)
         |> move 300 300
+      , words black (String.fromInt (List.length snake.segments))
+        |> move -200 -220
     ] 
-      
-
-
+    ++ (snake.segments |> List.map drawSegment)
 
 -- UPDATE
 
@@ -84,6 +85,9 @@ update computer snake =
     newCount = if collided snake then snake.count + 1 else snake.count
     newAppleX = if collided snake then 200 else snake.appleX
     newAppleY = if collided snake then 200 else snake.appleY
+    newSegments = 
+      if collided snake then updateSegments (snake.segments ++ (newSegment snake)) snake 
+      else updateSegments snake.segments snake
     
   in
     { snake
@@ -96,8 +100,29 @@ update computer snake =
       , count = newCount
       , appleX = newAppleX
       , appleY = newAppleY
+      , segments = newSegments
     }
 
+newSegment snake = 
+  [{
+    x = snake.x
+    , y = snake.y
+  }]
+ 
+
+drawSegment segment = 
+  circle (rgb 255 0 0) 25
+   |> fade 0.1
+   |> move segment.x segment.y
+
+updateSegments segments snake =
+  segments |> (List.map (updateSegment snake)) 
+
+updateSegment snake segment =  
+ {
+  x = snake.x + 10
+  , y = snake.y + 10
+ }
 
 inBounds min max x = -- Don't allow character to move offscreen
     if x > max then
