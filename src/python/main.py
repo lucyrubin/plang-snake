@@ -1,12 +1,15 @@
 from tkinter import *
+import random
+import math
 ## Referenced: https://prrasad.medium.com/building-a-snake-game-using-python-and-tkinter-a-step-by-step-guide-652ea41d6dd0
-MAX_TRAIL_LENGTH = 10
+MAX_TRAIL_LENGTH = 5
 class SnakeGame:
     # Constants
-    SPEED = 1
+    SPEED = 3
     CANVAS_WIDTH = 300
     CANVAS_HEIGHT = 300
     SNAKE_DIAMETER = 20
+    APPLE_DIAMETER = 15
     
     def __init__(self, root):
         self.root = root
@@ -22,10 +25,20 @@ class SnakeGame:
         x1=self.CANVAS_WIDTH / 2 + self.SNAKE_DIAMETER 
         y1=self.CANVAS_HEIGHT / 2 - self.SNAKE_DIAMETER
 
+        a0=self.CANVAS_WIDTH * 3 / 4
+        b0=self.CANVAS_WIDTH * 3 / 4
+        a1=self.CANVAS_WIDTH * 3 / 4 + self.APPLE_DIAMETER 
+        b1=self.CANVAS_HEIGHT * 3 / 4 - self.APPLE_DIAMETER
+
+
+
         self.head = Segment(self.canvas, x0, y0, x1, y1, isHead=True)
 
         # list of all snake segments
         self.snake = [self.head]
+
+        # apple
+        self.apple = Apple(self.canvas, a0, b0, a1, b1)
 
         # Game loop values
         self.game_over = False
@@ -81,6 +94,32 @@ class SnakeGame:
         if snake_x0 <= 0 or snake_y0 <= 0 or snake_x1 >= self.CANVAS_WIDTH or snake_y1 >= self.CANVAS_HEIGHT:
             self.game_over = True
 
+    def check_eat_apple(self):
+        snake_x0, snake_y0, snake_x1, snake_y1 = self.canvas.coords(self.head.segment)
+        apple_x0, apple_y0, apple_x1, apple_y1 = self.canvas.coords(self.apple.apple)
+
+        # calculate center coordinates of snake and apple
+        snakeCenterX = snake_x0 + self.SNAKE_DIAMETER / 2
+        snakeCenterY = snake_y0 + self.SNAKE_DIAMETER / 2
+        appleCenterX = apple_x0 + self.APPLE_DIAMETER / 2
+        appleCenterY = apple_y0 + self.APPLE_DIAMETER / 2
+
+        distance = (math.sqrt((snakeCenterX - appleCenterX) * (snakeCenterX - appleCenterX) + (snakeCenterY - appleCenterY) * (snakeCenterY - appleCenterY)))
+        print(distance)
+
+        # check if the snake head and apple instersect
+        if distance < self.SNAKE_DIAMETER:
+            self.head.eat_apple()
+
+            # calculate new random coordinates for apple
+            x0 = random.randrange(0, self.CANVAS_WIDTH)
+            y0 = random.randrange(0, self.CANVAS_HEIGHT)
+            x1 = x0 + self.APPLE_DIAMETER
+            y1 = y0 + self.APPLE_DIAMETER
+
+            self.apple.move(x0, y0, x1, y1)
+
+
     def end_game(self):
         self.canvas.create_text(self.CANVAS_WIDTH / 2, self.CANVAS_HEIGHT / 2, text="Dead", fill='black', font=('Helvetica', 30))
 
@@ -88,6 +127,7 @@ class SnakeGame:
         if not self.game_over:
             self.move()
             self.check_hit_wall()
+            self.check_eat_apple()
             if not self.game_over:
                 # Loop again
                 self.root.after(self.delay, self.game_loop)
@@ -107,6 +147,7 @@ class Segment:
         self.isHead = isHead
         self.parent = None
         self.child = None
+        self.apples = 0
 
     def set_parent(self, parent):
         self.parent = parent
@@ -135,6 +176,20 @@ class Segment:
     def move_child(self):
         if self.child:
             self.child.move()
+    
+    def eat_apple(self):
+        self.apples = self.apples + 1
+        print(self.apples)
+
+
+class Apple :
+    def __init__(self, canvas, x0, y0, x1, y1):
+        self.canvas = Canvas
+
+        self.apple = canvas.create_oval(x0, y0, x1, y1, fill="red")
+
+    def move(self, x0, y0, x1, y1):
+        self.canvas.coords(self.apple, x0, y0, x1, y1)
 
 # Create window
 root = Tk()
