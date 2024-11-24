@@ -3,6 +3,7 @@ module Snake exposing (game, addNewSegment)
 import Playground exposing (..)
 import Random
 import Array exposing (Array)
+
 -- PHYSICS PARAMETERS
 
 movementSpeed : Float
@@ -41,6 +42,8 @@ type alias Model =
     , trail: Array Point
     , isAddingSegment: Bool 
     , numAdded: Int 
+    , seedX : Random.Seed
+    , seedY : Random.Seed
   }
 
 initialState : Model  
@@ -51,13 +54,15 @@ initialState =
   , dir = Left
   , isAlive = True
   , count = 0
-  , appleX = 100
-  , appleY = 100
   , segments = Array.empty
   , head = {point = {x= 0, y= 0}, distanceFromHead = 0}
   , trail = Array.empty
   , isAddingSegment = False
   , numAdded = 0
+  , seedX = Random.initialSeed 12345
+  , seedY = Random.initialSeed 55105
+  , appleX = 50
+  , appleY = 50
   }
 
 type Direction = Left | Right | Up | Down
@@ -75,6 +80,8 @@ view computer model =
     b = computer.screen.bottom
     convertY y = (b + 76 + y)
   in
+    (Array.toList (model.segments) |> List.map drawSegment)
+    ++
     [ 
       if model.isAlive then
       circle (rgb 255 0 255) radius 
@@ -88,7 +95,7 @@ view computer model =
       , words black (String.fromInt (Array.length model.trail))
         |> move -200 -220
     ] 
-    ++ (Array.toList (model.segments) |> List.map drawSegment)
+    
 
 -- UPDATE
 
@@ -98,7 +105,6 @@ update computer model =
         (if model.dir == Up then model.y + movementSpeed else 
         if model.dir == Down then model.y - movementSpeed else model.y)
     newX = 
-      
         (if model.dir == Right then model.x + movementSpeed else 
         if model.dir == Left then model.x - movementSpeed else model.x)
     newDir = 
@@ -108,14 +114,12 @@ update computer model =
         else if computer.keyboard.down then Down
         else model.dir
     newCount = if collided model then model.count + 1 else model.count
-    newAppleX = if collided model then 
-        if model.appleX == 200 then 0
-          else 200
-        else model.appleX
-    newAppleY = if collided model then 
-        if model.appleY == 200 then 0 
-          else 200
-        else model.appleY
+    (newRandomX, nextSeedX) = if collided model then
+                    Random.step (Random.float -300 300) model.seedX
+                    else (model.appleX, model.seedX)
+    (newRandomY, nextSeedY) = if collided model then
+                    Random.step (Random.float -300 300) model.seedY
+                    else (model.appleY, model.seedY)
     newTrail = updateTrail model {x= newX, y= newY}
 
     -- Add multiple new segments instead of one so that they are easier to see
@@ -137,13 +141,15 @@ update computer model =
       , dir = newDir
       , isAlive = inBounds (computer.screen.left + (radius)) (computer.screen.right - (radius)) model.x && inBounds (computer.screen.bottom + (radius)) (computer.screen.top - (radius)) model.y && model.isAlive
       , count = newCount
-      , appleX = newAppleX
-      , appleY = newAppleY
       , segments = newSegments
       , head = model.head
       , trail = newTrail
       , isAddingSegment = newIsAddingSegment
       , numAdded = newNumAdded
+      , appleX = newRandomX
+      , seedX = nextSeedX
+      , appleY = newRandomY
+      , seedY = nextSeedY
       
     }
 
@@ -230,8 +236,6 @@ hypot : Float -> Float -> Float
 hypot x y = 
   toPolar (x, y) |> Tuple.first
  
-
-
 
 
 
