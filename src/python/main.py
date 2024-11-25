@@ -51,7 +51,6 @@ class SnakeGame:
         root.bind("<Right>", lambda event: self.set_direction("right"))
         root.bind("<Up>", lambda event: self.set_direction("up"))
         root.bind("<Down>", lambda event: self.set_direction("down"))
-        root.bind("<space>", lambda event: self.add_segment())
 
         # Start game
         self.game_loop()
@@ -94,6 +93,21 @@ class SnakeGame:
         if snake_x0 <= 0 or snake_y0 <= 0 or snake_x1 >= self.CANVAS_WIDTH or snake_y1 >= self.CANVAS_HEIGHT:
             self.game_over = True
 
+    def check_hit_self(self):
+        snake_x0, snake_y0, snake_x1, snake_y1 = self.canvas.coords(self.head.segment)
+        headCenterX = snake_x0 + self.SNAKE_DIAMETER
+        headCenterY = snake_y0 + self.SNAKE_DIAMETER
+
+        # checks for intersection with snake segments but skips the first 4 segments
+        for i in range(4 , len(self.snake)):
+            s = self.snake[i]
+            segment_x0, segment_y0, segment_x1, segment_y1 = self.canvas.coords(s.segment)
+            segmentCenterX = segment_x0 + self.SNAKE_DIAMETER
+            segmentCenterY = segment_y0 + self.SNAKE_DIAMETER
+            if math.dist([headCenterX, headCenterY], [segmentCenterX, segmentCenterY]) < self.SNAKE_DIAMETER:
+                self.game_over = True
+
+
     def check_eat_apple(self):
         snake_x0, snake_y0, snake_x1, snake_y1 = self.canvas.coords(self.head.segment)
         apple_x0, apple_y0, apple_x1, apple_y1 = self.canvas.coords(self.apple.apple)
@@ -104,20 +118,19 @@ class SnakeGame:
         appleCenterX = apple_x0 + self.APPLE_DIAMETER / 2
         appleCenterY = apple_y0 + self.APPLE_DIAMETER / 2
 
-        distance = (math.sqrt((snakeCenterX - appleCenterX) * (snakeCenterX - appleCenterX) + (snakeCenterY - appleCenterY) * (snakeCenterY - appleCenterY)))
-        print(distance)
 
         # check if the snake head and apple instersect
-        if distance < self.SNAKE_DIAMETER:
+        if math.dist([snakeCenterX, snakeCenterY], [appleCenterX, appleCenterY]) < self.SNAKE_DIAMETER:
             self.head.eat_apple()
 
             # calculate new random coordinates for apple
-            x0 = random.randrange(0, self.CANVAS_WIDTH)
-            y0 = random.randrange(0, self.CANVAS_HEIGHT)
+            x0 = random.randrange(self.CANVAS_WIDTH/20, self.CANVAS_WIDTH) - self.CANVAS_WIDTH/20
+            y0 = random.randrange(self.CANVAS_HEIGHT/20, self.CANVAS_HEIGHT) - self.CANVAS_HEIGHT/20
             x1 = x0 + self.APPLE_DIAMETER
             y1 = y0 + self.APPLE_DIAMETER
 
             self.apple.move(x0, y0, x1, y1)
+            self.add_segment()
 
 
     def end_game(self):
@@ -128,6 +141,7 @@ class SnakeGame:
             self.move()
             self.check_hit_wall()
             self.check_eat_apple()
+            self.check_hit_self()
             if not self.game_over:
                 # Loop again
                 self.root.after(self.delay, self.game_loop)
@@ -179,7 +193,6 @@ class Segment:
     
     def eat_apple(self):
         self.apples = self.apples + 1
-        print(self.apples)
 
 
 class Apple :
