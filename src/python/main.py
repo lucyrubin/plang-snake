@@ -184,7 +184,7 @@ class Segment:
 
 class Apple :
     def __init__(self, canvas, x0, y0, x1, y1):
-        self.canvas = Canvas
+        self.canvas = canvas
 
         self.apple = canvas.create_oval(x0, y0, x1, y1, fill="red")
 
