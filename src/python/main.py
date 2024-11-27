@@ -2,7 +2,7 @@ from tkinter import *
 import random
 import math
 ## Referenced: https://prrasad.medium.com/building-a-snake-game-using-python-and-tkinter-a-step-by-step-guide-652ea41d6dd0
-MAX_TRAIL_LENGTH = 5
+MAX_TRAIL_LENGTH = 2
 class SnakeGame:
     # Constants
     SPEED = 3
@@ -10,6 +10,8 @@ class SnakeGame:
     CANVAS_HEIGHT = 300
     SNAKE_DIAMETER = 20
     APPLE_DIAMETER = 15
+
+    SEGMENT_SIZE = 5 # number of circles per segment
     
     def __init__(self, root):
         self.root = root
@@ -30,8 +32,6 @@ class SnakeGame:
         a1=self.CANVAS_WIDTH * 3 / 4 + self.APPLE_DIAMETER 
         b1=self.CANVAS_HEIGHT * 3 / 4 - self.APPLE_DIAMETER
 
-
-
         self.head = Segment(self.canvas, x0, y0, x1, y1, isHead=True)
 
         # list of all snake segments
@@ -45,6 +45,8 @@ class SnakeGame:
         self.direction = "up"
         self.delay = 50
         self.tail_length = 1
+        self.is_adding_segment = False # currently adding circles for a new segment
+        self.num_added = 0 # number of circles added so far for a new segment
         
         # Key bindings
         root.bind("<Left>", lambda event: self.set_direction("left"))
@@ -77,16 +79,27 @@ class SnakeGame:
     
     # add a new segment to the snake
     def add_segment(self):
-        old_tail = self.snake[-1]
-        
-        # make a new segment and put it in the same place as the tail
-        x0, y0, x1, y1 = self.canvas.coords(old_tail.segment)
-        new_tail = Segment(self.canvas, x0, y0, x1, y1, isHead=False)
+        # add multiple circles to the snake which count as one segment
+        if self.is_adding_segment and self.num_added < self.SEGMENT_SIZE:
+            # add a segment to the snake
+            old_tail = self.snake[-1]
+            
+            # make a new segment and put it in the same place as the tail
+            x0, y0, x1, y1 = self.canvas.coords(old_tail.segment)
+            new_tail = Segment(self.canvas, x0, y0, x1, y1, isHead=False)
 
-        new_tail.set_parent(old_tail)
-        old_tail.set_child(new_tail)
+            new_tail.set_parent(old_tail)
+            old_tail.set_child(new_tail)
 
-        self.snake.append(new_tail)
+            self.snake.append(new_tail)
+
+            # Keep adding segments
+            self.num_added += 1 
+            self.add_segment()
+        else: 
+            # Stop adding segments
+            self.num_added = 0
+            self.is_adding_segment = False
         
     def check_hit_wall(self):
         snake_x0, snake_y0, snake_x1, snake_y1 = self.canvas.coords(self.head.segment)
@@ -98,8 +111,8 @@ class SnakeGame:
         headCenterX = snake_x0 + self.SNAKE_DIAMETER
         headCenterY = snake_y0 + self.SNAKE_DIAMETER
 
-        # checks for intersection with snake segments but skips the first 4 segments
-        for i in range(4 , len(self.snake)):
+        # checks for intersection with snake segments but skips the first few segments
+        for i in range(self.SEGMENT_SIZE * 3 , len(self.snake)):
             s = self.snake[i]
             segment_x0, segment_y0, segment_x1, segment_y1 = self.canvas.coords(s.segment)
             segmentCenterX = segment_x0 + self.SNAKE_DIAMETER
@@ -130,6 +143,8 @@ class SnakeGame:
             y1 = y0 + self.APPLE_DIAMETER
 
             self.apple.move(x0, y0, x1, y1)
+
+            self.is_adding_segment = True
             self.add_segment()
 
 
@@ -153,9 +168,9 @@ class Segment:
         self.canvas = canvas
 
         if isHead:
-            self.segment = canvas.create_oval(x0, y0, x1, y1, fill="pink")
+            self.segment = canvas.create_oval(x0, y0, x1, y1, fill="pink", outline="pink")
         else:
-            self.segment = canvas.create_oval(x0, y0, x1, y1, fill="blue")
+            self.segment = canvas.create_oval(x0, y0, x1, y1, fill="blue", outline="blue")
 
         self.trail = [] # trail of previous points
         self.isHead = isHead
