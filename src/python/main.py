@@ -55,8 +55,16 @@ class SnakeGame:
         root.bind("<Down>", lambda event: self.set_direction("down"))
 
         # Start game
+        score_label = Label(root, width=20)
+        score_label.pack(padx=10, pady=10)
+        self.grab_score(score_label)
         self.game_loop()
         
+
+    def grab_score(self, label):
+        label.config(text=str(len(self.snake)))
+        label.after(100, self.grab_score, label)
+
     def set_direction(self, direction):
         self.direction = direction
 

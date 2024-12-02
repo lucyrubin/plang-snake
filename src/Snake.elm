@@ -88,7 +88,7 @@ view computer model =
         |> move model.x model.y
       else 
       words black "Dead!"
-      , circle (rgb 255 0 0) appleRadius
+      , circle (rgb 0 255 0) appleRadius
         |> move model.appleX model.appleY
       , words black (String.fromInt model.count)
         |> move 300 300
