@@ -141,7 +141,7 @@ class SnakeGame:
 
 
         # check if the snake head and apple instersect
-        if math.dist([snakeCenterX, snakeCenterY], [appleCenterX, appleCenterY]) < self.SNAKE_DIAMETER:
+        if math.dist([snakeCenterX, snakeCenterY], [appleCenterX, appleCenterY]) < self.SNAKE_DIAMETER/2 + self.APPLE_DIAMETER/2:
             self.head.eat_apple()
 
             # calculate new random coordinates for apple
