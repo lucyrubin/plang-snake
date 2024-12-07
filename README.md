@@ -34,7 +34,8 @@ We used object oriented programming to implement the movement of the snake’s b
 Each part of the snake (including the head) is a 'Segment', which has a trail, a parent 'Segment', and a child 'Segment'.
 
 Every frame, a segment updates its trail, which contains its most recent two locations. 
-'def update_snake_trail(self):
+'''
+def update_snake_trail(self):
        # add new coordinate to trail
        self.trail.append(self.canvas.coords(self.segment))
 
@@ -42,11 +43,13 @@ Every frame, a segment updates its trail, which contains its most recent two loc
        # don't allow trail to exceed max length
        if len(self.trail) > MAX_TRAIL_LENGTH:
            # remove oldest coord from the trail
-           self.trail = self.trail[1:]'
+           self.trail = self.trail[1:]
+'''
 
 Every frame, the head 'Segment' moves. It then tells its child segment to move as well. It will move to its parent’s (the head in this case) oldest trail value. That child segment then tells its child to move as well, and the movement travels down the snake body. 
 
-'def move(self):
+'''
+def move(self):
        # check if parent has a full trail
        if len(self.parent.trail) == MAX_TRAIL_LENGTH:
            # move to the oldest trail value
@@ -57,10 +60,10 @@ Every frame, the head 'Segment' moves. It then tells its child segment to move a
    def move_child(self):
        if self.child:
            self.child.move()
-'
+'''
 
 
-***Elm Version:***
+### Elm Version:
 We did not use objects to implement the movement of the snake’s body. Although the implementation is different, the behavior is the same as the Python version. 
 
 Within the snake’s initial state are values for:
@@ -70,7 +73,8 @@ Within the snake’s initial state are values for:
 - array of segments
 - an array of recent trail coordinates
 
-'initialState =
+'''
+initialState =
  { x = 0
  , y = 0
  , length = 1
@@ -80,12 +84,14 @@ Within the snake’s initial state are values for:
  …
  , trail = Array.empty
  …
- }'
+ }
+ '''
 
 
 Each body segment follows the trail of the head segment. The position of the segment is based on its distance from the head. (ex. the 5th segment from the head will be placed at the 5th coordinate in the trail list)
 
-'-- Update the given Segment to match its Point data
+'''
+-- Update the given Segment to match its Point data
 updateSegment : Model -> Segment -> Segment
 updateSegment model segment =
  let
@@ -100,15 +106,18 @@ updateSegment model segment =
      , distanceFromHead = segment.distanceFromHead}
    Just aPoint ->
      {point = aPoint
-     , distanceFromHead = segment.distanceFromHead}'
+     , distanceFromHead = segment.distanceFromHead}
+'''
 
 Segments are drawn each frame based on their data
-'-- Draw a Segment based on its Point data
+'''
+-- Draw a Segment based on its Point data
 drawSegment : Segment -> Shape
 drawSegment segment =
  circle (rgb 255 255 0) 25
   |> fade 0.5
-  |> move segment.point.x segment.point.y'
+  |> move segment.point.x segment.point.y
+'''
 
 ## Collisions
 When checking whether or not the snake has eaten/collided with the apple object the logic is mostly the same between python and elm but the code looks a bit different. For both python and elm we check whether or not the distance between the center x and y of the apple and the center x and y of the snake head is less than their two radius’ added together. 
@@ -127,22 +136,26 @@ In the Python version we do something similar to the way we check if it has eate
 ## Random
 ### Python Version
 Python random is just 'random.randrange'
-'x0 = random.randrange(self.CANVAS_WIDTH/20, self.CANVAS_WIDTH) - self.CANVAS_WIDTH/20
+'''
+x0 = random.randrange(self.CANVAS_WIDTH/20, self.CANVAS_WIDTH) - self.CANVAS_WIDTH/20
            y0 = random.randrange(self.CANVAS_HEIGHT/20, self.CANVAS_HEIGHT) - self.CANVAS_HEIGHT/20
            x1 = x0 + self.APPLE_DIAMETER
            y1 = y0 + self.APPLE_DIAMETER
 
-           self.apple.move(x0, y0, x1, y1)'
+           self.apple.move(x0, y0, x1, y1)
+'''
 
 ### Elm Version
 In elm, random is a bit more complicated, our approach technically isn’t random since we are using a seed. Using a seed basically gives a set list of random values that we pull from rather than generating something completely new.  Might do some more research on how this actually works….
 
-    '(newRandomX, nextSeedX) = if collided model then
+    '''
+    (newRandomX, nextSeedX) = if collided model then
                     Random.step (Random.float -300 300) model.seedX
                     else (model.appleX, model.seedX)
     (newRandomY, nextSeedY) = if collided model then
                     Random.step (Random.float -300 300) model.seedY
-                    else (model.appleY, model.seedY)'
+                    else (model.appleY, model.seedY)
+    '''
 
 
 ## Conclusion
