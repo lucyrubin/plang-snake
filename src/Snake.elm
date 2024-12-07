@@ -3,6 +3,7 @@ module Snake exposing (game, addNewSegment)
 import Playground exposing (..)
 import Random
 import Array exposing (Array)
+import Array.Extra as Array
 
 -- PHYSICS PARAMETERS
 
@@ -44,6 +45,7 @@ type alias Model =
     , numAdded: Int 
     , seedX : Random.Seed
     , seedY : Random.Seed
+    , bumpSelf : Bool
   }
 
 initialState : Model  
@@ -63,6 +65,7 @@ initialState =
   , seedY = Random.initialSeed 55105
   , appleX = 50
   , appleY = 50
+  , bumpSelf = False
   }
 
 type Direction = Left | Right | Up | Down
@@ -131,15 +134,16 @@ update computer model =
     newSegments = 
       if  model.isAddingSegment then updateSegments (addNewSegment model) model 
       else updateSegments model.segments model
-    
-   
-    
+    newBumpSelf = if model.isAlive then 
+        checkSegments model.segments model
+      else
+        True
   in
     { model
       | x = newX
       , y = newY
       , dir = newDir
-      , isAlive = inBounds (computer.screen.left + (radius)) (computer.screen.right - (radius)) model.x && inBounds (computer.screen.bottom + (radius)) (computer.screen.top - (radius)) model.y && model.isAlive
+      , isAlive = inBounds (computer.screen.left + (radius)) (computer.screen.right - (radius)) model.x && inBounds (computer.screen.bottom + (radius)) (computer.screen.top - (radius)) model.y && model.isAlive && (not newBumpSelf)
       , count = newCount
       , segments = newSegments
       , head = model.head
@@ -150,6 +154,7 @@ update computer model =
       , seedX = nextSeedX
       , appleY = newRandomY
       , seedY = nextSeedY
+      , bumpSelf = newBumpSelf
       
     }
 
@@ -191,7 +196,7 @@ maxTrailLength model =
 -- Draw a Segment based on its Point data 
 drawSegment : Segment -> Shape
 drawSegment segment = 
-  circle (rgb 255 0 0) 25
+  circle (rgb 255 255 0) 25
    |> fade 0.5
    |> move segment.point.x segment.point.y
 
@@ -235,7 +240,13 @@ collided model = ((hypot(model.x - model.appleX) (model.y - model.appleY) < radi
 hypot : Float -> Float -> Float
 hypot x y = 
   toPolar (x, y) |> Tuple.first
- 
 
+
+checkSegments segments model = 
+  segments |> (Array.map (collidedSelf model)) |> Array.slice 30 -1 |> Array.any (\x -> x == True)
+ 
+-- Check if self(segment) collided with head
+collidedSelf model segment = 
+  ((hypot(model.x - segment.point.x) (model.y -  segment.point.y) < radius + appleRadius))
 
 
