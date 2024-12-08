@@ -28,7 +28,7 @@ class SnakeGame:
         x1=self.CANVAS_WIDTH / 2 + self.SNAKE_DIAMETER 
         y1=self.CANVAS_HEIGHT / 2 - self.SNAKE_DIAMETER
 
-        self.head = Segment(self.canvas, x0, y0, x1, y1, isHead=True)
+        self.head = Segment(self.canvas, x0, y0, x1, y1)
 
         # list of all snake segments
         self.snake = [self.head]
@@ -48,19 +48,31 @@ class SnakeGame:
         self.tail_length = 0 # number of segment chunks in the body
         self.is_adding_segment = False # currently adding circles for a new segment chunk
         self.num_circles_added = 0 # number of circles added so far for a new segment chunk
+        self.has_game_started = False
         
         # Key bindings
         root.bind("<Left>", lambda event: self.set_direction("left"))
         root.bind("<Right>", lambda event: self.set_direction("right"))
         root.bind("<Up>", lambda event: self.set_direction("up"))
         root.bind("<Down>", lambda event: self.set_direction("down"))
+        root.bind("<space>", lambda event: self.start_game())
 
-        # Start game
+        # Text
         score_label = Label(root, width=20)
         score_label.pack(padx=10, pady=10)
+
+        
+        self.start_game_label = self.canvas.create_text(self.CANVAS_WIDTH / 2, self.CANVAS_HEIGHT / 2, text="Press the spacebar to start", fill="black")
+        self.canvas.pack()
+        
+         # Start game
         self.grab_score(score_label)
         self.game_loop()
         
+    def start_game(self):
+        if not self.has_game_started:
+            self.canvas.delete(self.start_game_label)
+            self.has_game_started = True
 
     def grab_score(self, label):
         label.config(text=str(self.tail_length))
@@ -95,7 +107,7 @@ class SnakeGame:
             
             # make a new segment and put it in the same place as the tail
             x0, y0, x1, y1 = self.canvas.coords(old_tail.segment)
-            new_tail = Segment(self.canvas, x0, y0, x1, y1, isHead=False)
+            new_tail = Segment(self.canvas, x0, y0, x1, y1)
 
             # set up parent and child relationship
             new_tail.set_parent(old_tail)
@@ -162,28 +174,27 @@ class SnakeGame:
         self.canvas.create_text(self.CANVAS_WIDTH / 2, self.CANVAS_HEIGHT / 2, text="Game Over", fill='black', font=('Helvetica', 30))
 
     def game_loop(self):
-        if not self.game_over:
-            self.move()
-            self.check_hit_wall()
-            self.check_eat_apple()
-            self.check_hit_self()
+        if self.has_game_started:
             if not self.game_over:
-                # Loop again
-                self.root.after(self.delay, self.game_loop)
-            else:
-                self.end_game()
+                self.move()
+                self.check_hit_wall()
+                self.check_eat_apple()
+                self.check_hit_self()
+                if not self.game_over:
+                    # Loop again
+                    self.root.after(self.delay, self.game_loop)
+                else:
+                    self.end_game()
+        else:
+            # Loop again
+            self.root.after(self.delay, self.game_loop)
 
 class Segment:
-    def __init__(self, canvas, x0, y0, x1, y1, isHead):
+    def __init__(self, canvas, x0, y0, x1, y1):
         self.canvas = canvas
-
-        if isHead:
-            self.segment = canvas.create_oval(x0, y0, x1, y1, fill="pink", outline="pink")
-        else:
-            self.segment = canvas.create_oval(x0, y0, x1, y1, fill="blue", outline="blue")
+        self.segment = canvas.create_oval(x0, y0, x1, y1, fill="green", outline="green")
 
         self.trail = [] # trail of previous points
-        self.isHead = isHead
         self.parent = None
         self.child = None
 

@@ -19,7 +19,6 @@ chunkSize : Int -- number of circles per segment chunk of the snake body
 chunkSize = 10
 
 -- MAIN
-
 game =
   { initialState = initialState
   , updateState = update
@@ -43,6 +42,7 @@ type alias Model =
     , seedX : Random.Seed
     , seedY : Random.Seed
     , bumpSelf : Bool
+    , hasGameStarted : Bool 
   }
 
 initialState : Model  
@@ -62,6 +62,7 @@ initialState =
   , appleX = 50
   , appleY = 50
   , bumpSelf = False
+  , hasGameStarted = False
   }
 
 type Direction = Left | Right | Up | Down
@@ -77,13 +78,15 @@ view computer model =
   (Array.toList (model.segments) |> List.map drawSegment) -- for eeach segment in model.segments, call drawSegment on it
   ++
   [ 
-    if model.isAlive then
-    circle (rgb 255 0 255) radius  -- draw the head of the snake according to its position data
+    if not model.hasGameStarted then
+    words black "Press the spacebar to start"
+    else if model.isAlive then
+    circle (rgb 0 255 0) radius  -- draw the head of the snake according to its position data
       |> move model.x model.y
     else 
     words black "Game Over" -- draw game over text
 
-    , circle (rgb 0 255 0) appleRadius -- draw the apple according to its position data
+    , circle (rgb 255 0 0) appleRadius -- draw the apple according to its position data
       |> move model.appleX model.appleY
     , words black (String.fromInt model.tailLength) -- draw the current score
       |> move 300 300
@@ -126,6 +129,9 @@ update computer model =
         checkSegments model.segments model
       else
         True
+    newHasGameStarted = if model.hasGameStarted then True 
+      else if computer.keyboard.space then True 
+      else False
   in
     { model
       | x = newX
@@ -143,7 +149,7 @@ update computer model =
       , appleY = newRandomY
       , seedY = nextSeedY
       , bumpSelf = newBumpSelf
-      
+      , hasGameStarted = newHasGameStarted
     }
 
 -- add a new Segment to the Model
@@ -183,7 +189,7 @@ maxTrailLength model =
 -- Draw a Segment based on its Point data 
 drawSegment : Segment -> Shape
 drawSegment segment = 
-  circle (rgb 255 255 0) 25
+  circle (rgb 0 255 0) 25
    |> fade 0.5
    |> move segment.point.x segment.point.y
 
