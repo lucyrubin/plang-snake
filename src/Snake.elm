@@ -1,24 +1,22 @@
-module Snake exposing (game, addNewSegment)
+-- Authors: Michelle Dong, May Kinnamon, Lucy Rubin
+module Snake exposing (game)
 
 import Playground exposing (..)
 import Random
 import Array exposing (Array)
 import Array.Extra as Array
 
--- PHYSICS PARAMETERS
-
-movementSpeed : Float
+-- CONSTANTS
+movementSpeed : Float -- Speed of the snake movement
 movementSpeed = 2
 
--- CONSTANTS
-
-radius : Float
-radius = 25
-appleRadius : Float
+radius : Float -- Radius of a snake segment
+radius = 25 
+appleRadius : Float -- Radius of the apple circle
 appleRadius = 15
 
-segmentSize : Int
-segmentSize = 10
+chunkSize : Int -- number of circles per segment chunk of the snake body
+chunkSize = 10
 
 -- MAIN
 
@@ -30,19 +28,18 @@ game =
 
 type alias Model = 
   {
-    x : Float
-    , y : Float
-    , length : Int
-    , dir : Direction
-    , isAlive : Bool
-    , count : Int
-    , appleX : Float
-    , appleY : Float
-    , segments : Array Segment
-    , head : Segment
-    , trail: Array Point
-    , isAddingSegment: Bool 
-    , numAdded: Int 
+    x : Float -- x coordinate of the head
+    , y : Float -- y coordinate of the head
+    , dir : Direction -- Direction that the head is moving
+    , isAlive : Bool -- Whether or not the snake has dies
+    , tailLength : Int -- number of segment chunks in the body
+    , appleX : Float -- x coordinate of the apple
+    , appleY : Float -- y coordinate of the apple
+    , segments : Array Segment -- all body segments
+    , head : Segment -- head segment
+    , trail: Array Point -- list of the head's past Points
+    , isAddingSegment: Bool -- currently adding circles for a new segment chunk
+    , numAdded: Int -- number of circles added so far for a new segment chunk
     , seedX : Random.Seed
     , seedY : Random.Seed
     , bumpSelf : Bool
@@ -52,10 +49,9 @@ initialState : Model
 initialState =
   { x = 0
   , y = 0
-  , length = 1
   , dir = Left
   , isAlive = True
-  , count = 0
+  , tailLength = 0 
   , segments = Array.empty
   , head = {point = {x= 0, y= 0}, distanceFromHead = 0}
   , trail = Array.empty
@@ -72,67 +68,59 @@ type Direction = Left | Right | Up | Down
 
 type alias Point = {x: Float, y: Float}
 
-type alias Segment = {point: Point, distanceFromHead: Int}
+type alias Segment = {point: Point, distanceFromHead: Int} -- A segment has a Point (coordinate) and a distance from the head. Ex, the 5th body segment has a distanceFromHead of 5
 
 -- VIEW
 
 view computer model =
-  let
-    w = computer.screen.width
-    h = computer.screen.height
-    b = computer.screen.bottom
-    convertY y = (b + 76 + y)
-  in
-    (Array.toList (model.segments) |> List.map drawSegment)
-    ++
-    [ 
-      if model.isAlive then
-      circle (rgb 255 0 255) radius 
-        |> move model.x model.y
-      else 
-      words black "Dead!"
-      , circle (rgb 0 255 0) appleRadius
-        |> move model.appleX model.appleY
-      , words black (String.fromInt model.count)
-        |> move 300 300
-      , words black (String.fromInt (Array.length model.trail))
-        |> move -200 -220
-    ] 
-    
 
+  (Array.toList (model.segments) |> List.map drawSegment) -- for eeach segment in model.segments, call drawSegment on it
+  ++
+  [ 
+    if model.isAlive then
+    circle (rgb 255 0 255) radius  -- draw the head of the snake according to its position data
+      |> move model.x model.y
+    else 
+    words black "Game Over" -- draw game over text
+
+    , circle (rgb 0 255 0) appleRadius -- draw the apple according to its position data
+      |> move model.appleX model.appleY
+    , words black (String.fromInt model.tailLength) -- draw the current score
+      |> move 300 300
+  ] 
+    
 -- UPDATE
 
 update computer model =
   let
-    newY = 
+    newY = -- calculate the new head y position based on the current direction
         (if model.dir == Up then model.y + movementSpeed else 
         if model.dir == Down then model.y - movementSpeed else model.y)
-    newX = 
+    newX =  -- calculate the new head x position based on the current direction
         (if model.dir == Right then model.x + movementSpeed else 
         if model.dir == Left then model.x - movementSpeed else model.x)
-    newDir = 
+    newDir = -- update the direction based on user input
         if computer.keyboard.right then Right
         else if computer.keyboard.left then Left
         else if computer.keyboard.up then Up
         else if computer.keyboard.down then Down
         else model.dir
-    newCount = if collided model then model.count + 1 else model.count
-    (newRandomX, nextSeedX) = if collided model then
+    newTailLength = if collidedWithApple model then model.tailLength + 1 else model.tailLength -- if snake ate an apple, increase the tail length
+    (newRandomX, nextSeedX) = if collidedWithApple model then
                     Random.step (Random.float -300 300) model.seedX
                     else (model.appleX, model.seedX)
-    (newRandomY, nextSeedY) = if collided model then
+    (newRandomY, nextSeedY) = if collidedWithApple model then
                     Random.step (Random.float -300 300) model.seedY
                     else (model.appleY, model.seedY)
-    newTrail = updateTrail model {x= newX, y= newY}
+    newTrail = updateTrail model {x= newX, y= newY} -- update the trail with the new head coordinates
 
-    -- Add multiple new segments instead of one so that they are easier to see
-    newIsAddingSegment = if collided model then True 
-      else if model.isAddingSegment && model.numAdded < segmentSize then True
+    newIsAddingSegment = if collidedWithApple model then True  -- Add multiple new segments instead of one so that they are easier to see
+      else if model.isAddingSegment && model.numAdded < chunkSize then True
       else False
-    newNumAdded = if model.isAddingSegment then model.numAdded + 1
+    newNumAdded = if model.isAddingSegment then model.numAdded + 1 -- Number of new segments added to the current chunk
       else 0
     newSegments = 
-      if  model.isAddingSegment then updateSegments (addNewSegment model) model 
+      if  model.isAddingSegment then updateSegments (addNewSegment model) model -- create a new segment and add it to the model
       else updateSegments model.segments model
     newBumpSelf = if model.isAlive then 
         checkSegments model.segments model
@@ -144,7 +132,7 @@ update computer model =
       , y = newY
       , dir = newDir
       , isAlive = inBounds (computer.screen.left + (radius)) (computer.screen.right - (radius)) model.x && inBounds (computer.screen.bottom + (radius)) (computer.screen.top - (radius)) model.y && model.isAlive && (not newBumpSelf)
-      , count = newCount
+      , tailLength = newTailLength
       , segments = newSegments
       , head = model.head
       , trail = newTrail
@@ -161,7 +149,6 @@ update computer model =
 -- add a new Segment to the Model
 addNewSegment : Model -> Array Segment
 addNewSegment model = Array.append model.segments (Array.fromList [newSegment model])
-
 
 -- create a new Segment
 newSegment : Model -> Segment
@@ -233,14 +220,13 @@ inBounds min max x =
       True
 
 -- Check if snake head collided with apple
-collided: Model -> Bool  
-collided model = ((hypot(model.x - model.appleX) (model.y - model.appleY) < radius + appleRadius))
+collidedWithApple: Model -> Bool  
+collidedWithApple model = ((hypot(model.x - model.appleX) (model.y - model.appleY) < radius + appleRadius))
 
 -- Returns distance between centers
 hypot : Float -> Float -> Float
 hypot x y = 
   toPolar (x, y) |> Tuple.first
-
 
 checkSegments segments model = 
   segments |> (Array.map (collidedSelf model)) |> Array.slice 30 -1 |> Array.any (\x -> x == True)
@@ -248,5 +234,3 @@ checkSegments segments model =
 -- Check if self(segment) collided with head
 collidedSelf model segment = 
   ((hypot(model.x - segment.point.x) (model.y -  segment.point.y) < radius + appleRadius))
-
-

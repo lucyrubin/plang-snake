@@ -1,4 +1,6 @@
-To run elm version: elm-live --open -- src/Main.elm --output=elm.js
+# Running:
+To run elm version: elm-live --open -- src/Main.elm --output=elm.js in the plang-snake directory
+
 
 ## Introduction
 
@@ -66,27 +68,30 @@ def move(self):
 ### Elm Version:
 We did not use objects to implement the movement of the snake’s body. Although the implementation is different, the behavior is the same as the Python version. 
 
-Within the snake’s initial state are values for:
+Within the snake’s model are values for:
 - x and y coordinates of the head
-- length of the snake
 - count of number of apples eaten
 - array of segments
 - an array of recent trail coordinates
 
 '''
-initialState =
- { x = 0
- , y = 0
- , length = 1
- …
- , count = 0
- , segments = Array.empty
- …
- , trail = Array.empty
- …
- }
+type alias Model = 
+  {
+    x : Float -- x coordinate of the head
+    , y : Float -- y coordinate of the head
+    ...
+    , tailLength : Int -- number of segment chunks in the body
+    ...
+    , segments : Array Segment -- all body segments
+    , head : Segment -- head segment
+    , trail: Array Point
+    ...
+  }
  '''
 
+There are still 'Segment' types in this version, but they are not objects that can be instantiated like in the Python version.
+A 'Segment' is a type alias for a record:
+' type alias Segment = {point: Point, distanceFromHead: Int} '
 
 Each body segment follows the trail of the head segment. The position of the segment is based on its distance from the head. (ex. the 5th segment from the head will be placed at the 5th coordinate in the trail list)
 
@@ -149,10 +154,10 @@ x0 = random.randrange(self.CANVAS_WIDTH/20, self.CANVAS_WIDTH) - self.CANVAS_WID
 In elm, random is a bit more complicated, our approach technically isn’t random since we are using a seed. Using a seed basically gives a set list of random values that we pull from rather than generating something completely new.  Might do some more research on how this actually works….
 
     '''
-    (newRandomX, nextSeedX) = if collided model then
+    (newRandomX, nextSeedX) = if collidedWithApple model then
                     Random.step (Random.float -300 300) model.seedX
                     else (model.appleX, model.seedX)
-    (newRandomY, nextSeedY) = if collided model then
+    (newRandomY, nextSeedY) = if collidedWithApple model then
                     Random.step (Random.float -300 300) model.seedY
                     else (model.appleY, model.seedY)
     '''

@@ -1,3 +1,4 @@
+# Authors: Michelle Dong, May Kinnamon, Lucy Rubin
 from tkinter import *
 import random
 import math
@@ -5,13 +6,13 @@ import math
 MAX_TRAIL_LENGTH = 2
 class SnakeGame:
     # Constants
-    SPEED = 3
+    SPEED = 3 # Speed of the snake movement
     CANVAS_WIDTH = 300
     CANVAS_HEIGHT = 300
     SNAKE_DIAMETER = 20
     APPLE_DIAMETER = 15
 
-    SEGMENT_SIZE = 5 # number of circles per segment
+    CHUNK_SIZE = 5 # number of circles per segment chunk of the snake body
     
     def __init__(self, root):
         self.root = root
@@ -27,26 +28,26 @@ class SnakeGame:
         x1=self.CANVAS_WIDTH / 2 + self.SNAKE_DIAMETER 
         y1=self.CANVAS_HEIGHT / 2 - self.SNAKE_DIAMETER
 
-        a0=self.CANVAS_WIDTH * 3 / 4
-        b0=self.CANVAS_WIDTH * 3 / 4
-        a1=self.CANVAS_WIDTH * 3 / 4 + self.APPLE_DIAMETER 
-        b1=self.CANVAS_HEIGHT * 3 / 4 - self.APPLE_DIAMETER
-
         self.head = Segment(self.canvas, x0, y0, x1, y1, isHead=True)
 
         # list of all snake segments
         self.snake = [self.head]
 
-        # apple
+        # Apple
+        a0=self.CANVAS_WIDTH * 3 / 4
+        b0=self.CANVAS_WIDTH * 3 / 4
+        a1=self.CANVAS_WIDTH * 3 / 4 + self.APPLE_DIAMETER 
+        b1=self.CANVAS_HEIGHT * 3 / 4 - self.APPLE_DIAMETER
+
         self.apple = Apple(self.canvas, a0, b0, a1, b1)
 
         # Game loop values
         self.game_over = False
-        self.direction = "up"
-        self.delay = 50
-        self.tail_length = 1
-        self.is_adding_segment = False # currently adding circles for a new segment
-        self.num_added = 0 # number of circles added so far for a new segment
+        self.direction = "up" # Direction that the head is moving
+        self.delay = 50 # Delay between each frame
+        self.tail_length = 0 # number of segment chunks in the body
+        self.is_adding_segment = False # currently adding circles for a new segment chunk
+        self.num_circles_added = 0 # number of circles added so far for a new segment chunk
         
         # Key bindings
         root.bind("<Left>", lambda event: self.set_direction("left"))
@@ -62,7 +63,7 @@ class SnakeGame:
         
 
     def grab_score(self, label):
-        label.config(text=str(len(self.snake)))
+        label.config(text=str(self.tail_length))
         label.after(100, self.grab_score, label)
 
     def set_direction(self, direction):
@@ -85,10 +86,10 @@ class SnakeGame:
         self.head.update_snake_trail()
         self.head.move_child()
     
-    # add a new segment to the snake
-    def add_segment(self):
+    # Add a new segment chunk to the snake
+    def add_segment_chunk(self):
         # add multiple circles to the snake which count as one segment
-        if self.is_adding_segment and self.num_added < self.SEGMENT_SIZE:
+        if self.is_adding_segment and self.num_circles_added < self.CHUNK_SIZE:
             # add a segment to the snake
             old_tail = self.snake[-1]
             
@@ -96,38 +97,41 @@ class SnakeGame:
             x0, y0, x1, y1 = self.canvas.coords(old_tail.segment)
             new_tail = Segment(self.canvas, x0, y0, x1, y1, isHead=False)
 
+            # set up parent and child relationship
             new_tail.set_parent(old_tail)
             old_tail.set_child(new_tail)
 
+            # add segment to the snake
             self.snake.append(new_tail)
 
             # Keep adding segments
-            self.num_added += 1 
-            self.add_segment()
+            self.num_circles_added += 1 
+            self.add_segment_chunk()
         else: 
             # Stop adding segments
-            self.num_added = 0
+            self.num_circles_added = 0
             self.is_adding_segment = False
-        
+    
+    # checks for lose condition when the head of the snake hits a wall    
     def check_hit_wall(self):
         snake_x0, snake_y0, snake_x1, snake_y1 = self.canvas.coords(self.head.segment)
         if snake_x0 <= 0 or snake_y0 <= 0 or snake_x1 >= self.CANVAS_WIDTH or snake_y1 >= self.CANVAS_HEIGHT:
             self.game_over = True
 
+    # checks for a lose condition when the head of the snake hits a body segment
     def check_hit_self(self):
         snake_x0, snake_y0, snake_x1, snake_y1 = self.canvas.coords(self.head.segment)
         headCenterX = snake_x0 + self.SNAKE_DIAMETER
         headCenterY = snake_y0 + self.SNAKE_DIAMETER
 
         # checks for intersection with snake segments but skips the first few segments
-        for i in range(self.SEGMENT_SIZE * 3 , len(self.snake)):
+        for i in range(self.CHUNK_SIZE * 3 , len(self.snake)):
             s = self.snake[i]
             segment_x0, segment_y0, segment_x1, segment_y1 = self.canvas.coords(s.segment)
             segmentCenterX = segment_x0 + self.SNAKE_DIAMETER
             segmentCenterY = segment_y0 + self.SNAKE_DIAMETER
             if math.dist([headCenterX, headCenterY], [segmentCenterX, segmentCenterY]) < self.SNAKE_DIAMETER:
                 self.game_over = True
-
 
     def check_eat_apple(self):
         snake_x0, snake_y0, snake_x1, snake_y1 = self.canvas.coords(self.head.segment)
@@ -139,11 +143,8 @@ class SnakeGame:
         appleCenterX = apple_x0 + self.APPLE_DIAMETER / 2
         appleCenterY = apple_y0 + self.APPLE_DIAMETER / 2
 
-
         # check if the snake head and apple instersect
         if math.dist([snakeCenterX, snakeCenterY], [appleCenterX, appleCenterY]) < self.SNAKE_DIAMETER:
-            self.head.eat_apple()
-
             # calculate new random coordinates for apple
             x0 = random.randrange(self.CANVAS_WIDTH/20, self.CANVAS_WIDTH) - self.CANVAS_WIDTH/20
             y0 = random.randrange(self.CANVAS_HEIGHT/20, self.CANVAS_HEIGHT) - self.CANVAS_HEIGHT/20
@@ -153,11 +154,12 @@ class SnakeGame:
             self.apple.move(x0, y0, x1, y1)
 
             self.is_adding_segment = True
-            self.add_segment()
+            self.tail_length += 1
+            self.add_segment_chunk()
 
 
     def end_game(self):
-        self.canvas.create_text(self.CANVAS_WIDTH / 2, self.CANVAS_HEIGHT / 2, text="Dead", fill='black', font=('Helvetica', 30))
+        self.canvas.create_text(self.CANVAS_WIDTH / 2, self.CANVAS_HEIGHT / 2, text="Game Over", fill='black', font=('Helvetica', 30))
 
     def game_loop(self):
         if not self.game_over:
@@ -184,14 +186,14 @@ class Segment:
         self.isHead = isHead
         self.parent = None
         self.child = None
-        self.apples = 0
 
     def set_parent(self, parent):
-        self.parent = parent
+        self.parent = parent # parent segment
     
     def set_child(self, child):
-        self.child = child
+        self.child = child # child segment
 
+    # Add a new coordinate to the trail based on current coordinate
     def update_snake_trail(self):
         # add new coordinate to trail
         self.trail.append(self.canvas.coords(self.segment))
@@ -207,16 +209,13 @@ class Segment:
             # move to the oldest trail value
             self.canvas.coords(self.segment, self.parent.trail[0])
             self.update_snake_trail()
-
+            
+            # Go down the body segments
             self.move_child()
 
     def move_child(self):
         if self.child:
             self.child.move()
-    
-    def eat_apple(self):
-        self.apples = self.apples + 1
-
 
 class Apple :
     def __init__(self, canvas, x0, y0, x1, y1):
