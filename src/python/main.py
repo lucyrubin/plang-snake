@@ -146,6 +146,7 @@ class SnakeGame:
                 self.game_over = True
 
     def check_eat_apple(self):
+        # gets coordinates from snake and apple
         snake_x0, snake_y0, snake_x1, snake_y1 = self.canvas.coords(self.head.segment)
         apple_x0, apple_y0, apple_x1, apple_y1 = self.canvas.coords(self.apple.apple)
 
@@ -156,7 +157,7 @@ class SnakeGame:
         appleCenterY = apple_y0 + self.APPLE_DIAMETER / 2
 
         # check if the snake head and apple instersect
-        if math.dist([snakeCenterX, snakeCenterY], [appleCenterX, appleCenterY]) < self.SNAKE_DIAMETER:
+        if math.dist([snakeCenterX, snakeCenterY], [appleCenterX, appleCenterY]) < self.SNAKE_DIAMETER/2 + self.APPLE_DIAMETER/2:
             # calculate new random coordinates for apple
             x0 = random.randrange(self.CANVAS_WIDTH/20, self.CANVAS_WIDTH) - self.CANVAS_WIDTH/20
             y0 = random.randrange(self.CANVAS_HEIGHT/20, self.CANVAS_HEIGHT) - self.CANVAS_HEIGHT/20
@@ -234,6 +235,7 @@ class Apple :
 
         self.apple = canvas.create_oval(x0, y0, x1, y1, fill="red")
 
+    # moves apple to the coordinates inputted
     def move(self, x0, y0, x1, y1):
         self.canvas.coords(self.apple, x0, y0, x1, y1)
 

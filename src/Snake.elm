@@ -229,6 +229,7 @@ inBounds min max x =
 collidedWithApple: Model -> Bool  
 collidedWithApple model = ((hypot(model.x - model.appleX) (model.y - model.appleY) < radius + appleRadius))
 
+-- Taken from Paul's Asteroid Game 
 -- Returns distance between centers
 hypot : Float -> Float -> Float
 hypot x y = 
