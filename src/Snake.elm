@@ -39,9 +39,9 @@ type alias Model =
     , trail: Array Point -- list of the head's past Points
     , isAddingSegment: Bool -- currently adding circles for a new segment chunk
     , numAdded: Int -- number of circles added so far for a new segment chunk
-    , seedX : Random.Seed
-    , seedY : Random.Seed
-    , bumpSelf : Bool
+    , seedX : Random.Seed -- seed for randon x coord
+    , seedY : Random.Seed -- seed for random y coord
+    , bumpSelf : Bool -- whether head bumps with any body segment
     , hasGameStarted : Bool 
   }
 
@@ -126,7 +126,7 @@ update computer model =
       if  model.isAddingSegment then updateSegments (addNewSegment model) model -- create a new segment and add it to the model
       else updateSegments model.segments model
     newBumpSelf = if model.isAlive then 
-        checkSegments model.segments model
+        checkSegments model.segments model -- checks whether any of the body segments bumps with head
       else
         True
     newHasGameStarted = if model.hasGameStarted then True 
@@ -235,9 +235,11 @@ hypot : Float -> Float -> Float
 hypot x y = 
   toPolar (x, y) |> Tuple.first
 
+
+-- Calls the collidedSelf method on all segments, if the segments not originally touching the head bumps with head, return True
 checkSegments segments model = 
   segments |> (Array.map (collidedSelf model)) |> Array.slice 30 -1 |> Array.any (\x -> x == True)
  
--- Check if self(segment) collided with head
+-- Check if self(single segment) collided with head
 collidedSelf model segment = 
   ((hypot(model.x - segment.point.x) (model.y -  segment.point.y) < radius + appleRadius))
