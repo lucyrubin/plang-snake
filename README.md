@@ -127,16 +127,67 @@ drawSegment segment =
 ## Collisions
 When checking whether or not the snake has eaten/collided with the apple object the logic is mostly the same between python and elm but the code looks a bit different. For both python and elm we check whether or not the distance between the center x and y of the apple and the center x and y of the snake head is less than their two radius’ added together. 
 
-### Elm Version
+### Collisions with Apple
+#### Elm Version
 In the Elm version this is very simple. We just take the hypotenuse of the different between x and y values for the snake head and the apple and return true if that distance is less than the two radius’ added together and false if otherwise. 
 
-### Python Version
+'''
+collidedWithApple: Model -> Bool  
+collidedWithApple model = ((hypot(model.x - model.appleX) (model.y - model.appleY) < radius + appleRadius))
+'''
+
+#### Python Version
 In Python it looks a little different. Since tkinter determines coordinates of objects based on their upper left corner of the bounding box we need to calculate the center coordinates of the apple and the snake in order to calculate the distance between those two points and check if they are less than  sum of the diameters of the apple and the snake head. 
 
-We also check whether the snake has collided with itself to initiate the game over response in both Elm and Python. 
+'''
+    def check_eat_apple(self):
+        # gets coordinates from snake and apple
+        snake_x0, snake_y0, snake_x1, snake_y1 = self.canvas.coords(self.head.segment)
+        apple_x0, apple_y0, apple_x1, apple_y1 = self.canvas.coords(self.apple.apple)
 
-In the Python version we do something similar to the way we check if it has eaten the apple. First we calculate the center x and y of the snake head then then loop through the list of segments of the snake. On line 123 the first bound on the range make it so that it doesn’t check collision with the first 3 segments. When testing we had some errors with the game immediately ending when adding a new segments because they would initially be added to the canvas to close to the snake head and would then cause the check_hit_self method to initiate the game over response. Within the for loop i
+        # calculate center coordinates of snake and apple
+        snakeCenterX = snake_x0 + self.SNAKE_DIAMETER / 2
+        snakeCenterY = snake_y0 + self.SNAKE_DIAMETER / 2
+        appleCenterX = apple_x0 + self.APPLE_DIAMETER / 2
+        appleCenterY = apple_y0 + self.APPLE_DIAMETER / 2
 
+        # check if the snake head and apple instersect
+        if math.dist([snakeCenterX, snakeCenterY], [appleCenterX, appleCenterY]) < self.SNAKE_DIAMETER/2 + self.APPLE_DIAMETER/2:
+            # calculate new random coordinates for apple
+'''
+
+### Collisions with Self
+#### Python
+In the Python version we do something similar to the way we check if it has eaten the apple. First we calculate the center x and y of the snake head then loop through the list of segments of the snake. On line 123 the first bound on the range makes it so that it doesn’t check collision with the first 3 segments. When testing we had some errors with the game immediately ending when adding a new segment because they would initially be added to the canvas too close to the snake head and would then cause the check_hit_self method to initiate the game over response. Within the for loop it calculates the center of the segment it is looping through and calculates the distance between the head and the segment to return true if the distance is less than the diameter of the head/one of the segments.
+
+'''
+    def check_hit_self(self):
+        snake_x0, snake_y0, snake_x1, snake_y1 = self.canvas.coords(self.head.segment)
+        headCenterX = snake_x0 + self.SNAKE_DIAMETER
+        headCenterY = snake_y0 + self.SNAKE_DIAMETER
+
+        # checks for intersection with snake segments but skips the first few segments
+        for i in range(self.CHUNK_SIZE * 3 , len(self.snake)):
+            s = self.snake[i]
+            segment_x0, segment_y0, segment_x1, segment_y1 = self.canvas.coords(s.segment)
+            segmentCenterX = segment_x0 + self.SNAKE_DIAMETER
+            segmentCenterY = segment_y0 + self.SNAKE_DIAMETER
+            if math.dist([headCenterX, headCenterY], [segmentCenterX, segmentCenterY]) < self.SNAKE_DIAMETER:
+                self.game_over = True
+'''
+
+### Elm
+In Elm the code is much more succinct but fairly similar to the python version. The collidedSelf function does something very familiar by just calculating the hypotenuse between the coordinates of the head and segment and returning whether or not it is less than the diameter of the snake segment. The checkSegments function maps the segments and calls collidedSelf on each one skipping the first 30 segments with Array.slice 30 -1 and returning true for that segments if there is a collision. The array then checks if there are any trues.
+
+'''
+-- Calls the collidedSelf method on all segments, if the segments not originally touching the head bumps with head, return True
+checkSegments segments model = 
+  segments |> (Array.map (collidedSelf model)) |> Array.slice 30 -1 |> Array.any (\x -> x == True)
+ 
+-- Check if self(single segment) collided with head
+collidedSelf model segment = 
+  ((hypot(model.x - segment.point.x) (model.y -  segment.point.y) < radius + appleRadius))
+'''
 
 ## Random
 ### Python Version
