@@ -158,7 +158,7 @@ def check_eat_apple(self):
 
 ### Collisions with Self
 #### Python
-In the Python version we do something similar to the way we check if it has eaten the apple. First we calculate the center x and y of the snake head then loop through the list of segments of the snake. On line 123 the first bound on the range makes it so that it doesn’t check collision with the first 3 segments. When testing we had some errors with the game immediately ending when adding a new segment because they would initially be added to the canvas too close to the snake head and would then cause the check_hit_self method to initiate the game over response. Within the for loop it calculates the center of the segment it is looping through and calculates the distance between the head and the segment to return true if the distance is less than the diameter of the head/one of the segments.
+In the Python version we do something similar to the way we check if it has eaten the apple. First we calculate the center x and y of the snake head then loop through the list of segments of the snake. The first bound on the range makes it so that it doesn’t check collision with the first 3 segments. When testing we had some errors with the game immediately ending when adding a new segment because they would initially be added to the canvas too close to the snake head and would then cause the check_hit_self method to initiate the game over response. Within the for loop it calculates the center of the segment it is looping through and calculates the distance between the head and the segment to return true if the distance is less than the diameter of the head/one of the segments.
 
 ```
 def check_hit_self(self):
