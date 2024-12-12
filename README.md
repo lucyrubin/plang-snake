@@ -190,6 +190,9 @@ collidedSelf model segment =
 ```
 
 ## Random
+
+We use random when we want to update the coordinates of the apple. 
+
 ### Python Version
 Python random is just 'random.randrange'
 ```
@@ -202,18 +205,18 @@ x0 = random.randrange(self.CANVAS_WIDTH/20, self.CANVAS_WIDTH) - self.CANVAS_WID
 ```
 
 ### Elm Version
-In elm, random is a bit more complicated, our approach technically isn’t random since we are using a seed. Using a seed basically gives a set list of random values that we pull from rather than generating something completely new. 
+In elm, random is a bit more complicated, and our approach technically isn’t random since we are using a seed. Using a seed basically gives a set list of random values that we pull from rather than generating something completely new. 
 
-    ```
-    (newRandomX, nextSeedX) = if collidedWithApple model then
-                    Random.step (Random.float -300 300) model.seedX
-                    else (model.appleX, model.seedX)
-    (newRandomY, nextSeedY) = if collidedWithApple model then
-                    Random.step (Random.float -300 300) model.seedY
-                    else (model.appleY, model.seedY)
-    ```
+```
+(newRandomX, nextSeedX) = if collidedWithApple model then
+                Random.step (Random.float -300 300) model.seedX
+                else (model.appleX, model.seedX)
+(newRandomY, nextSeedY) = if collidedWithApple model then
+                Random.step (Random.float -300 300) model.seedY
+                else (model.appleY, model.seedY)
+```
 
-This is because of the purely functional aspect of Elm and how output is purely based on the input. For more on Elm randomness, and something that is more random, it would be interesting to into Elm's Random.Generator 
+This is because of the purely functional aspect of Elm and how output is purely based on the input. For more on Elm randomness, and something that is more random, it would be interesting to look into Elm's Random.Generator 
 
 ## Conclusion
 We were able to create the Snake Game in both Elm and Python with the same logic, but with different implementations. In writing the Elm version, we did not encounter any runtime errors, only compile-time errors. In writing the Python version, we encountered both runtime and compile-time errors. While the Elm version is more difficult for us to read and write (because we are more unfamiliar with it), it would be easier to implement a pause and resume game function than it would be in the Python version. 
