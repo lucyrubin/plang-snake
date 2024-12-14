@@ -68,6 +68,8 @@ def move(self):
 ### Elm Version:
 We did not use objects to implement the movement of the snake’s body. Although the implementation is different, the behavior is the same as the Python version. 
 
+Because Elm is purely functional, we could not create segment objects that have parent and child relationships. Pure functions cannot have external effects on anything, and parent/child relationships would violate that rule. 
+
 Within the snake’s model are values for:
 - x and y coordinates of the head
 - count of number of apples eaten
@@ -89,11 +91,13 @@ type alias Model =
   }
  ```
 
-There are still `Segment` types in this version, but they are not objects that can be instantiated like in the Python version.
+There are still `Segment` types in this version, but they are not objects that can be instantiated like in the Python version, instead it is a piece of immutable data.
 A `Segment` is a type alias for a record:
 ` type alias Segment = {point: Point, distanceFromHead: Int} `
 
 Each body segment follows the trail of the head segment. The position of the segment is based on its distance from the head. (ex. the 5th segment from the head will be placed at the 5th coordinate in the trail list)
+
+Each frame, segments are updated based on the previous game state:
 
 ```
 -- Update the given Segment to match its Point data
@@ -219,4 +223,4 @@ In elm, random is a bit more complicated, and our approach technically isn’t r
 This is because of the purely functional aspect of Elm and how output is purely based on the input. For more on Elm randomness, and something that is more random, it would be interesting to look into Elm's Random.Generator 
 
 ## Conclusion
-We were able to create the Snake Game in both Elm and Python with the same logic, but with different implementations. In writing the Elm version, we did not encounter any runtime errors, only compile-time errors. In writing the Python version, we encountered both runtime and compile-time errors. While the Elm version is more difficult for us to read and write (because we are more unfamiliar with it), it would be easier to implement a pause and resume game function than it would be in the Python version. 
+We were able to create the Snake Game in both Elm and Python with the same logic, but with different implementations. In writing the Elm version, we did not encounter any runtime errors, only compile-time errors. This is because of its pure functions which cannot have any external effects. In writing the Python version, we encountered both runtime and compile-time errors. The Elm version is more difficult for us to read and write (in part because we are more unfamiliar with it). However, was more difficult to debug the Python version because of runtime errors. Once we could get Elm to compile, we no longer had to worry about runtime errors. It it would be easier to implement a pause and resume game function in Elm than it would be in Python, but other new game functions that require code reorganization would likely be easier to implement in Python. 
