@@ -173,7 +173,7 @@ def check_eat_apple(self):
 ```
 
 ### Collisions with Self
-#### Python
+#### Python Version
 The way we check whether or not the snake has collided with itself is very simple in python and is essentially the same as checking whether the snake has eaten the apple. We loop over every segment in the snake (skipping the first couple or segements) and check if it intersects with the head. Then we can set gameOver to be true which causes other game over responses. 
 
 ```
@@ -192,7 +192,7 @@ def check_hit_self(self):
             self.game_over = True
 ```
 
-### Elm
+### Elm Version
 
 In elm this looks a little different. We again create a new variable newBumpSelf that is set to either the result of the checkSegments function or false if the snake is dead. 
 
