@@ -129,11 +129,11 @@ drawSegment segment =
 ```
 
 ## Collisions
-When checking whether or not the snake has eaten/collided with the apple object the logic is mostly the same between python and elm but the code looks a bit different due to the natue of the languages and the way we had to set up our code. 
+When checking whether or not the snake has eaten/collided with the apple object the logic is mostly the same between python and elm but the code looks a bit different due to the nature of the languages and the way we had to set up our code. 
 
 ### Collisions with Apple
 #### Elm Version
-In the Elm version (like Python) the coordinates of the apple and head of the snake are taken to caculate the distance between the two. If the distance is less than both radius' then the counter must be increased and the apple must spawn in a new location. 
+In the Elm version (like Python) the coordinates of the apple and head of the snake are taken to calculate the distance between the two. If the distance is less than both radiuses then the counter must be increased and the apple must spawn in a new location. 
 
 In the function that checks whether the snake has eaten the apple, we had to pass the function the model itself so that we wer able to refer back to changing variables in our code because of Elm's pure functions.
 
