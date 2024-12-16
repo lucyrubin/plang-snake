@@ -129,40 +129,52 @@ drawSegment segment =
 ```
 
 ## Collisions
-When checking whether or not the snake has eaten/collided with the apple object the logic is mostly the same between python and elm but the code looks a bit different. For both python and elm we check whether or not the distance between the center x and y of the apple and the center x and y of the snake head is less than their two radius’ added together. 
+When checking whether or not the snake has eaten/collided with the apple object the logic is mostly the same between python and elm but the code looks a bit different due to the natue of the languages and the way we had to set up our code. 
 
 ### Collisions with Apple
 #### Elm Version
-In the Elm version this is very simple. We just take the hypotenuse of the different between x and y values for the snake head and the apple and return true if that distance is less than the two radius’ added together and false if otherwise. 
+In the Elm version (like Python) the coordinates of the apple and head of the snake are taken to caculate the distance between the two. If the distance is less than both radius' then the counter must be increased and the apple must spawn in a new location. 
+
+In the function that checks whether the snake has eaten the apple, we had to pass the function the model itself so that we wer able to refer back to changing variables in our code because of Elm's pure functions.
 
 ```
 collidedWithApple: Model -> Bool  
 collidedWithApple model = ((hypot(model.x - model.appleX) (model.y - model.appleY) < radius + appleRadius))
 ```
 
-#### Python Version
-In Python it looks a little different. Since tkinter determines coordinates of objects based on their upper left corner of the bounding box we need to calculate the center coordinates of the apple and the snake in order to calculate the distance between those two points and check if they are less than  sum of the diameters of the apple and the snake head. 
+When changing the eaten apple counter in Elm, we had to create a new variable newTailLength that checked this function and was set to the previous tailLength + 1. Then we set tailLength to newTailLength in update. The same thing happens with the coordinates of the new apple by creating a new variable and setting the old variable to the new one.
 
 ```
+newTailLength = if collidedWithApple model then model.tailLength + 1 else model.tailLength -- if snake ate an apple, increase the tail length
+```
+
+```
+, tailLength = newTailLength
+```
+
+
+#### Python Version
+In Python the process of checking whether the coordinates are close enough to have intersected is essentailly the same. However when it comes to changing the apple counter and the placement of the apple things look a bit different. The process of moving the apple is very different. In Python we made the apple its own object and gave it parameters for the new random x and y corrdinates. The apple object then had its own method that changed its position on the screen. Additionally we could change the tail_length (apples eaten) inside of this method which is not something we could have done in Elm!
+```
 def check_eat_apple(self):
-    # gets coordinates from snake and apple
-    snake_x0, snake_y0, snake_x1, snake_y1 = self.canvas.coords(self.head.segment)
-    apple_x0, apple_y0, apple_x1, apple_y1 = self.canvas.coords(self.apple.apple)
-
-    # calculate center coordinates of snake and apple
-    snakeCenterX = snake_x0 + self.SNAKE_DIAMETER / 2
-    snakeCenterY = snake_y0 + self.SNAKE_DIAMETER / 2
-    appleCenterX = apple_x0 + self.APPLE_DIAMETER / 2
-    appleCenterY = apple_y0 + self.APPLE_DIAMETER / 2
-
-    # check if the snake head and apple instersect
+    ...
     if math.dist([snakeCenterX, snakeCenterY], [appleCenterX, appleCenterY]) < self.SNAKE_DIAMETER/2 + self.APPLE_DIAMETER/2:
-        # calculate new random coordinates for apple
+            # calculate new random coordinates for apple
+            x0 = random.randrange(self.CANVAS_WIDTH/20, self.CANVAS_WIDTH) - self.CANVAS_WIDTH/20
+            y0 = random.randrange(self.CANVAS_HEIGHT/20, self.CANVAS_HEIGHT) - self.CANVAS_HEIGHT/20
+            x1 = x0 + self.APPLE_DIAMETER
+            y1 = y0 + self.APPLE_DIAMETER
+
+            self.apple.move(x0, y0, x1, y1)
+
+            self.is_adding_segment = True
+            self.tail_length += 1
+            self.add_segment_chunk() 
 ```
 
 ### Collisions with Self
 #### Python
-In the Python version we do something similar to the way we check if it has eaten the apple. First we calculate the center x and y of the snake head then loop through the list of segments of the snake. The first bound on the range makes it so that it doesn’t check collision with the first 3 segments. When testing we had some errors with the game immediately ending when adding a new segment because they would initially be added to the canvas too close to the snake head and would then cause the check_hit_self method to initiate the game over response. Within the for loop it calculates the center of the segment it is looping through and calculates the distance between the head and the segment to return true if the distance is less than the diameter of the head/one of the segments.
+The way we check whether or not the snake has collided with itself is very simple in python and is essentially the same as checking whether the snake has eaten the apple. We loop over every segment in the snake (skipping the first couple or segements) and check if it intersects with the head. Then we can set gameOver to be true which causes other game over responses. 
 
 ```
 def check_hit_self(self):
@@ -181,7 +193,17 @@ def check_hit_self(self):
 ```
 
 ### Elm
-In Elm the code is much more succinct but fairly similar to the python version. The collidedSelf function does something very familiar by just calculating the hypotenuse between the coordinates of the head and segment and returning whether or not it is less than the diameter of the snake segment. The checkSegments function maps the segments and calls collidedSelf on each one skipping the first 30 segments with Array.slice 30 -1 and returning true for that segments if there is a collision. The array then checks if there are any trues.
+
+In elm this looks a little different. We again create a new variable newBumpSelf that is set to either the result of the checkSegments function or false if the snake is dead. 
+
+```
+    newBumpSelf = if model.isAlive then 
+        checkSegments model.segments model -- checks whether any of the body segments bumps with head
+      else
+        True
+```
+
+We would expect the function to use a loop to check each body segement and stop when it reached a case where the segement and head collided, however instead we used map to create an array that held true and false values for whether or not each of the segements (skipping the first few) had collided with the head. The function then returns true if any of the values in the array are true. The result of this function was then set as the value of the newBumpSelf variable which was set to bumpSelf in update.
 
 ```
 -- Calls the collidedSelf method on all segments, if the segments not originally touching the head bumps with head, return True

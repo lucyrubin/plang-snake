@@ -240,6 +240,6 @@ hypot x y =
 checkSegments segments model = 
   segments |> (Array.map (collidedSelf model)) |> Array.slice 30 -1 |> Array.any (\x -> x == True)
  
--- Check if self(single segment) collided with head
+-- Check if self (single segment) collided with head
 collidedSelf model segment = 
   ((hypot(model.x - segment.point.x) (model.y -  segment.point.y) < radius + appleRadius))
