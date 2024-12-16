@@ -231,7 +231,9 @@ x0 = random.randrange(self.CANVAS_WIDTH/20, self.CANVAS_WIDTH) - self.CANVAS_WID
 ```
 
 ### Elm Version
-In elm, random is a bit more complicated, and our approach technically isn’t random since we are using a seed. Using a seed basically gives a set list of random values that we pull from rather than generating something completely new. 
+In elm, random is a bit more complicated. As a purely functional language, given the same input, it can only have one output. If we want random results, our outputs would not be the same for the same inputs. To make random "pure", our approach to random is "pseudo-random" since we are using a seed. Using a seed basically gives a predefined "random" value. Using Random.step, we would get a new "random" seed, to generate a new "random" value. 
+
+"random" is in quotes because for the same seed, the value returned will always be the same and the new "random" seed generated is also the same. This means that everytime you play the game, the apple will always follow the same path.
 
 ```
 (newRandomX, nextSeedX) = if collidedWithApple model then
@@ -242,7 +244,13 @@ In elm, random is a bit more complicated, and our approach technically isn’t r
                 else (model.appleY, model.seedY)
 ```
 
-This is because of the purely functional aspect of Elm and how output is purely based on the input. For more on Elm randomness, and something that is more random, it would be interesting to look into Elm's Random.Generator 
+We used this approach since it was easier to understand and implement. An alternative method for random in Elm is Elm Random.Generator; this method will handle the seeds so that it feels more random and you could also combine the function with different mappings. 
 
 ## Conclusion
-We were able to create the Snake Game in both Elm and Python with the same logic, but with different implementations. In writing the Elm version, we did not encounter any runtime errors, only compile-time errors. This is because of its pure functions which cannot have any external effects. In writing the Python version, we encountered both runtime and compile-time errors. The Elm version is more difficult for us to read and write (in part because we are more unfamiliar with it). However, was more difficult to debug the Python version because of runtime errors. Once we could get Elm to compile, we no longer had to worry about runtime errors. It it would be easier to implement a pause and resume game function in Elm than it would be in Python, but other new game functions that require code reorganization would likely be easier to implement in Python. 
+We were able to create the Snake Game in both Elm and Python with the same logic, but with different implementations. 
+
+Besides the differences mentioned previously, when it comes to implementing the game in Elm, we noticed that it was much more difficult to do two things at once. For example, when we checked for collision with self, we needed a complete step for returning a boolean, and then another step for setting the boolean to end the game; whereas in python, we could directly end the game. This is related to the immutability of functional programming and is something we had to get used to. 
+
+With Elm, other aspects we had to get used to was being more aware of types and if-statements always needing an "else". 
+
+In writing the Elm version, we did not encounter any runtime errors, only compile-time errors. This is because of its pure functions which cannot have any external effects. In writing the Python version, we encountered both runtime and compile-time errors. The Elm version is more difficult for us to read and write (in part because we are more unfamiliar with it). However, was more difficult to debug the Python version because of runtime errors. Once we could get Elm to compile, we no longer had to worry about runtime errors. It it would be easier to implement a pause and resume game function in Elm than it would be in Python, but other new game functions that require code reorganization would likely be easier to implement in Python. 
